@@ -5,7 +5,8 @@ const {
   shuffle
 } = require(`../../utils`);
 
-const fs = require(`fs`);
+const fs = require(`fs`).promises;
+const chalk = require(`chalk`);
 
 const DEFAULT_COUNT = 1;
 const RECORDS_LIMIT = 1000;
@@ -70,6 +71,12 @@ const getRecentRandomDate = () => {
   return new Date(Date.now() - getRandomInt(1, totalMsInAQuarter));
 };
 
+/**
+ * Формирует массив со случайными тестовыми данными
+ *
+ * @param {Integer} count
+ * @return {Array}
+ */
 const generateCards = (count) => {
   const randomText = shuffle(SENTENCES);
   return Array(count).fill({}).map(() => ({
@@ -83,7 +90,7 @@ const generateCards = (count) => {
 
 module.exports = {
   name: `--generate`,
-  run(args) {
+  async run(args) {
     const [count] = args;
     const countCard = Number.parseInt(count, 10) || DEFAULT_COUNT;
 
@@ -92,11 +99,11 @@ module.exports = {
     }
     const content = JSON.stringify(generateCards(countCard));
 
-    return fs.writeFile(FILE_NAME, content, (err) => {
-      if (err) {
-        return console.error(`Can't write data to file...`);
-      }
-      return console.info(`Operation success. File created.`);
-    });
+    try {
+      await fs.writeFile(FILE_NAME, content);
+      console.log(chalk.green(`Operation success. File created.`));
+    } catch (err) {
+      console.error(chalk.red(`Can't write data to file...`));
+    }
   }
 };
